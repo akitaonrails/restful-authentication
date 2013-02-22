@@ -4,6 +4,7 @@ class <%= class_name %>Test < ActiveSupport::TestCase
   # Be sure to include AuthenticatedTestHelper in test/test_helper.rb instead.
   # Then, you can remove it from this and the functional test.
   include AuthenticatedTestHelper
+  fixtures :<%= table_name %>
 
   def test_should_create_<%= file_name %>
     assert_difference '<%= class_name %>.count' do
@@ -54,64 +55,56 @@ class <%= class_name %>Test < ActiveSupport::TestCase
   end
 
   def test_should_reset_password
-    <%= file_name %> = <%= class_name %>.make
-    <%= file_name %>.update_attributes(:password => 'new password', :password_confirmation => 'new password')
-    assert_equal <%= file_name %>, <%= class_name %>.authenticate(<%= file_name %>.login, 'new password')
+    <%= table_name %>(:quentin).update_attributes(:password => 'new password', :password_confirmation => 'new password')
+    assert_equal <%= table_name %>(:quentin), <%= class_name %>.authenticate('quentin', 'new password')
   end
 
   def test_should_not_rehash_password
-    <%= file_name %> = <%= class_name %>.make    
-    <%= file_name %>.update_attributes(:login => 'quentin2')
-    assert_equal <%= file_name %>, <%= class_name %>.authenticate('quentin2', <%= file_name %>.password)
+    <%= table_name %>(:quentin).update_attributes(:login => 'quentin2')
+    assert_equal <%= table_name %>(:quentin), <%= class_name %>.authenticate('quentin2', 'monkey')
   end
 
   def test_should_authenticate_<%= file_name %>
-    <%= file_name %> = <%= class_name %>.make    
-    assert_equal <%= file_name %>, <%= class_name %>.authenticate(<%= file_name %>.login, <%= file_name %>.password)
+    assert_equal <%= table_name %>(:quentin), <%= class_name %>.authenticate('quentin', 'monkey')
   end
 
   def test_should_set_remember_token
-    <%= file_name %> = <%= class_name %>.make    
-    <%= file_name %>.remember_me
-    assert_not_nil <%= file_name %>.remember_token
-    assert_not_nil <%= file_name %>.remember_token_expires_at
+    <%= table_name %>(:quentin).remember_me
+    assert_not_nil <%= table_name %>(:quentin).remember_token
+    assert_not_nil <%= table_name %>(:quentin).remember_token_expires_at
   end
 
   def test_should_unset_remember_token
-    <%= file_name %> = <%= class_name %>.make    
-    <%= file_name %>.remember_me
-    assert_not_nil <%= file_name %>.remember_token
-    <%= file_name %>.forget_me
-    assert_nil <%= file_name %>.remember_token
+    <%= table_name %>(:quentin).remember_me
+    assert_not_nil <%= table_name %>(:quentin).remember_token
+    <%= table_name %>(:quentin).forget_me
+    assert_nil <%= table_name %>(:quentin).remember_token
   end
 
   def test_should_remember_me_for_one_week
-    <%= file_name %> = <%= class_name %>.make    
     before = 1.week.from_now.utc
-    <%= file_name %>.remember_me_for 1.week
+    <%= table_name %>(:quentin).remember_me_for 1.week
     after = 1.week.from_now.utc
-    assert_not_nil <%= file_name %>.remember_token
-    assert_not_nil <%= file_name %>.remember_token_expires_at
-    assert <%= file_name %>.remember_token_expires_at.between?(before, after)
+    assert_not_nil <%= table_name %>(:quentin).remember_token
+    assert_not_nil <%= table_name %>(:quentin).remember_token_expires_at
+    assert <%= table_name %>(:quentin).remember_token_expires_at.between?(before, after)
   end
 
   def test_should_remember_me_until_one_week
     time = 1.week.from_now.utc
-    <%= file_name %> = <%= class_name %>.make    
-    <%= file_name %>.remember_me_until time
-    assert_not_nil <%= file_name %>.remember_token
-    assert_not_nil <%= file_name %>.remember_token_expires_at
-    assert_equal <%= file_name %>.remember_token_expires_at, time
+    <%= table_name %>(:quentin).remember_me_until time
+    assert_not_nil <%= table_name %>(:quentin).remember_token
+    assert_not_nil <%= table_name %>(:quentin).remember_token_expires_at
+    assert_equal <%= table_name %>(:quentin).remember_token_expires_at, time
   end
 
   def test_should_remember_me_default_two_weeks
     before = 2.weeks.from_now.utc
-    <%= file_name %> = <%= class_name %>.make    
-    <%= file_name %>.remember_me
+    <%= table_name %>(:quentin).remember_me
     after = 2.weeks.from_now.utc
-    assert_not_nil <%= file_name %>.remember_token
-    assert_not_nil <%= file_name %>.remember_token_expires_at
-    assert <%= file_name %>.remember_token_expires_at.between?(before, after)
+    assert_not_nil <%= table_name %>(:quentin).remember_token
+    assert_not_nil <%= table_name %>(:quentin).remember_token_expires_at
+    assert <%= table_name %>(:quentin).remember_token_expires_at.between?(before, after)
   end
 <% if options[:stateful] %>
   def test_should_register_passive_<%= file_name %>
@@ -123,49 +116,43 @@ class <%= class_name %>Test < ActiveSupport::TestCase
   end
 
   def test_should_suspend_<%= file_name %>
-    <%= file_name %> = <%= class_name %>.make    
-    <%= file_name %>.suspend!
-    assert <%= file_name %>.suspended?
+    <%= table_name %>(:quentin).suspend!
+    assert <%= table_name %>(:quentin).suspended?
   end
 
   def test_suspended_<%= file_name %>_should_not_authenticate
-    <%= file_name %> = <%= class_name %>.make    
-    <%= file_name %>.suspend!
-    assert_not_equal <%= file_name %>, <%= class_name %>.authenticate(<%= file_name %>.login, <%= file_name %>.password)
+    <%= table_name %>(:quentin).suspend!
+    assert_not_equal <%= table_name %>(:quentin), <%= class_name %>.authenticate('quentin', 'test')
   end
 
   def test_should_unsuspend_<%= file_name %>_to_active_state
-    <%= file_name %> = <%= class_name %>.make    
-    <%= file_name %>.suspend!
-    assert <%= file_name %>.suspended?
-    <%= file_name %>.unsuspend!
-    assert <%= file_name %>.active?
+    <%= table_name %>(:quentin).suspend!
+    assert <%= table_name %>(:quentin).suspended?
+    <%= table_name %>(:quentin).unsuspend!
+    assert <%= table_name %>(:quentin).active?
   end
 
   def test_should_unsuspend_<%= file_name %>_with_nil_activation_code_and_activated_at_to_passive_state
-    <%= file_name %> = <%= class_name %>.make    
-    <%= file_name %>.suspend!
+    <%= table_name %>(:quentin).suspend!
     <%= class_name %>.update_all :activation_code => nil, :activated_at => nil
-    assert <%= file_name %>.suspended?
-    <%= file_name %>.reload.unsuspend!
-    assert <%= file_name %>.passive?
+    assert <%= table_name %>(:quentin).suspended?
+    <%= table_name %>(:quentin).reload.unsuspend!
+    assert <%= table_name %>(:quentin).passive?
   end
 
   def test_should_unsuspend_<%= file_name %>_with_activation_code_and_nil_activated_at_to_pending_state
-    <%= file_name %> = <%= class_name %>.make    
-    <%= file_name %>.suspend!
+    <%= table_name %>(:quentin).suspend!
     <%= class_name %>.update_all :activation_code => 'foo-bar', :activated_at => nil
-    assert <%= file_name %>.suspended?
-    <%= file_name %>.reload.unsuspend!
-    assert <%= file_name %>.pending?
+    assert <%= table_name %>(:quentin).suspended?
+    <%= table_name %>(:quentin).reload.unsuspend!
+    assert <%= table_name %>(:quentin).pending?
   end
 
   def test_should_delete_<%= file_name %>
-    <%= file_name %> = <%= class_name %>.make    
-    assert_nil <%= file_name %>.deleted_at
-    <%= file_name %>.delete!
-    assert_not_nil <%= file_name %>.deleted_at
-    assert <%= file_name %>.deleted?
+    assert_nil <%= table_name %>(:quentin).deleted_at
+    <%= table_name %>(:quentin).delete!
+    assert_not_nil <%= table_name %>(:quentin).deleted_at
+    assert <%= table_name %>(:quentin).deleted?
   end
 <% end %>
 protected

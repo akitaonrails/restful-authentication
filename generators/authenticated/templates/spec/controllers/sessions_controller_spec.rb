@@ -5,8 +5,9 @@ require File.dirname(__FILE__) + '<%= ('/..'*controller_class_nesting_depth) + '
 include AuthenticatedTestHelper
 
 describe <%= controller_class_name %>Controller do
+  fixtures        :<%= table_name %>
   before do 
-    @<%= file_name %>  = <%= class_name %>.make
+    @<%= file_name %>  = mock_<%= file_name %>
     @login_params = { :login => 'quentin', :password => 'test' }
     <%= class_name %>.stub!(:authenticate).with(@login_params[:login], @login_params[:password]).and_return(@<%= file_name %>)
   end
@@ -72,7 +73,7 @@ describe <%= controller_class_name %>Controller do
   describe "on failed login" do
     before do
       <%= class_name %>.should_receive(:authenticate).with(anything(), anything()).and_return(nil)
-      log_in
+      login_as :quentin
     end
     it 'logs out keeping session'   do controller.should_receive(:logout_keeping_session!); do_create end
     it 'flashes an error'           do do_create; flash[:error].should =~ /Couldn't log you in as 'quentin'/ end
@@ -90,7 +91,7 @@ describe <%= controller_class_name %>Controller do
       get :destroy
     end
     before do 
-      log_in
+      login_as :quentin
     end
     it 'logs me out'                   do controller.should_receive(:logout_killing_session!); do_destroy end
     it 'redirects me to the home page' do do_destroy; response.should be_redirect     end
@@ -104,7 +105,7 @@ describe <%= controller_class_name %>Controller do
       route_for(:controller => '<%= controller_controller_name %>', :action => 'new').should == "/login"
     end
     it "should route the create <%= controller_controller_name %> correctly" do
-      route_for(:controller => '<%= controller_controller_name %>', :action => 'create').should == { :path => "/<%= controller_routing_path %>", :method => :post }
+      route_for(:controller => '<%= controller_controller_name %>', :action => 'create').should == "/<%= controller_routing_path %>"
     end
     it "should route the destroy <%= controller_controller_name %> action correctly" do
       route_for(:controller => '<%= controller_controller_name %>', :action => 'destroy').should == "/logout"

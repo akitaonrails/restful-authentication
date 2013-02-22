@@ -11,28 +11,13 @@ Rails::Generator::Commands::Create.class_eval do
     end
   end
   
-  def route_resources(*resources)
-    resource_options = resources.last.is_a?(Hash) ? resources.pop : nil    
-    resource_list = resources.map { |r| r.to_sym.inspect }.join(', ')
-    sentinel = 'ActionController::Routing::Routes.draw do |map|'
-
-    resource_list << ", #{resource_options.inspect}" if resource_options
-    logger.route "map.resources #{resource_list}"
-    unless options[:pretend]
-      gsub_file 'config/routes.rb', /(#{Regexp.escape(sentinel)})/mi do |match|
-        "#{match}\n  map.resources #{resource_list}\n"
-      end
-    end
-  end
-  
   def route_name(name, path, route_options = {})
     sentinel = 'ActionController::Routing::Routes.draw do |map|'
     
-    routing_options = route_options.map { |k,v| ":#{k} => '#{v}'" }.join(', ')
-    logger.route "map.#{name} '#{path}', #{routing_options}"
+    logger.route "map.#{name} '#{path}', :controller => '#{route_options[:controller]}', :action => '#{route_options[:action]}'"
     unless options[:pretend]
       gsub_file 'config/routes.rb', /(#{Regexp.escape(sentinel)})/mi do |match|
-        "#{match}\n  map.#{name} '#{path}', #{routing_options}"
+        "#{match}\n  map.#{name} '#{path}', :controller => '#{route_options[:controller]}', :action => '#{route_options[:action]}'"
       end
     end
   end

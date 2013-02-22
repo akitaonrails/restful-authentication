@@ -9,9 +9,10 @@ class <%= controller_class_name %>ControllerTest < ActionController::TestCase
   # Then, you can remove it from this and the units test.
   include AuthenticatedTestHelper
 
+  fixtures :<%= table_name %>
+
   def test_should_login_and_redirect
-    <%= file_name %> = <%= class_name %>.make    
-    post :create, :login => <%= file_name %>.login, :password => <%= file_name %>.password
+    post :create, :login => 'quentin', :password => 'monkey'
     assert session[:<%= file_name %>_id]
     assert_response :redirect
   end
@@ -23,51 +24,48 @@ class <%= controller_class_name %>ControllerTest < ActionController::TestCase
   end
 
   def test_should_logout
-    log_in
+    login_as :quentin
     get :destroy
     assert_nil session[:<%= file_name %>_id]
     assert_response :redirect
   end
 
   def test_should_remember_me
-    <%= file_name %> = <%= class_name %>.make    
     @request.cookies["auth_token"] = nil
-    post :create, :login => <%= file_name %>.login, :password => <%= file_name %>.password, :remember_me => "1"
+    post :create, :login => 'quentin', :password => 'monkey', :remember_me => "1"
     assert_not_nil @response.cookies["auth_token"]
   end
 
   def test_should_not_remember_me
     @request.cookies["auth_token"] = nil
     post :create, :login => 'quentin', :password => 'monkey', :remember_me => "0"
+    puts @response.cookies["auth_token"]
     assert @response.cookies["auth_token"].blank?
   end
   
   def test_should_delete_token_on_logout
-    log_in
+    login_as :quentin
     get :destroy
     assert @response.cookies["auth_token"].blank?
   end
 
   def test_should_login_with_cookie
-    <%= file_name %> = <%= class_name %>.make
-    <%= file_name %>.remember_me
-    @request.cookies["auth_token"] = cookie_for(<%= file_name %>)
+    <%= table_name %>(:quentin).remember_me
+    @request.cookies["auth_token"] = cookie_for(:quentin)
     get :new
     assert @controller.send(:logged_in?)
   end
 
   def test_should_fail_expired_cookie_login
-    <%= file_name %> = <%= class_name %>.make    
-    <%= file_name %>.remember_me
-    <%= file_name %>.update_attribute :remember_token_expires_at, 5.minutes.ago
-    @request.cookies["auth_token"] = cookie_for(<%= file_name %>)
+    <%= table_name %>(:quentin).remember_me
+    <%= table_name %>(:quentin).update_attribute :remember_token_expires_at, 5.minutes.ago
+    @request.cookies["auth_token"] = cookie_for(:quentin)
     get :new
     assert !@controller.send(:logged_in?)
   end
 
   def test_should_fail_cookie_login
-    <%= file_name %> = <%= class_name %>.make    
-    <%= file_name %>.remember_me
+    <%= table_name %>(:quentin).remember_me
     @request.cookies["auth_token"] = auth_token('invalid_auth_token')
     get :new
     assert !@controller.send(:logged_in?)
@@ -79,6 +77,6 @@ class <%= controller_class_name %>ControllerTest < ActionController::TestCase
     end
     
     def cookie_for(<%= file_name %>)
-      auth_token <%= file_name %>.remember_token
+      auth_token <%= table_name %>(<%= file_name %>).remember_token
     end
 end

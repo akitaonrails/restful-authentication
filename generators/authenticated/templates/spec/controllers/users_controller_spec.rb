@@ -5,6 +5,8 @@ require File.dirname(__FILE__) + '<%= ('/..'*model_controller_class_nesting_dept
 include AuthenticatedTestHelper
 
 describe <%= model_controller_class_name %>Controller do
+  fixtures :<%= table_name %>
+
   it 'allows signup' do
     lambda do
       create_<%= file_name %>
@@ -60,13 +62,12 @@ describe <%= model_controller_class_name %>Controller do
   
   <% if options[:include_activation] %>
   it 'activates user' do
-    create_<%= file_name %>(:login => 'aaron', :password => 'monkey', :password_confirmation => 'monkey')
     <%= class_name %>.authenticate('aaron', 'monkey').should be_nil
-    get :activate, :activation_code => assigns[:<%= file_name %>].activation_code
+    get :activate, :activation_code => <%= table_name %>(:aaron).activation_code
     response.should redirect_to('/login')
     flash[:notice].should_not be_nil
     flash[:error ].should     be_nil
-    <%= class_name %>.authenticate('aaron', 'monkey').should == assigns[:<%= file_name %>]
+    <%= class_name %>.authenticate('aaron', 'monkey').should == <%= table_name %>(:aaron)
   end
   
   it 'does not activate user without key' do
@@ -116,11 +117,11 @@ describe <%= model_controller_class_name %>Controller do
     end
     
     it "should route <%= model_controller_controller_name %>'s 'update' action correctly" do
-      route_for(:controller => '<%= model_controller_controller_name %>', :action => 'update', :id => '1').should == { :path => "/<%= model_controller_routing_path %>/1", :method => :put }
+      route_for(:controller => '<%= model_controller_controller_name %>', :action => 'update', :id => '1').should == "/<%= model_controller_routing_path %>/1"
     end
     
     it "should route <%= model_controller_controller_name %>'s 'destroy' action correctly" do
-      route_for(:controller => '<%= model_controller_controller_name %>', :action => 'destroy', :id => '1').should == { :path => "/<%= model_controller_routing_path %>/1", :method => :delete }
+      route_for(:controller => '<%= model_controller_controller_name %>', :action => 'destroy', :id => '1').should == "/<%= model_controller_routing_path %>/1"
     end
   end
   
@@ -173,20 +174,20 @@ describe <%= model_controller_class_name %>Controller do
     
     it "should route <%= model_controller_routing_name %>_path() to /<%= model_controller_routing_path %>" do
       <%= model_controller_routing_name %>_path().should == "/<%= model_controller_routing_path %>"
-      <%= model_controller_routing_name %>_path(:format => 'xml').should == "/<%= model_controller_routing_path %>.xml"
-      <%= model_controller_routing_name %>_path(:format => 'json').should == "/<%= model_controller_routing_path %>.json"
+      formatted_<%= model_controller_routing_name %>_path(:format => 'xml').should == "/<%= model_controller_routing_path %>.xml"
+      formatted_<%= model_controller_routing_name %>_path(:format => 'json').should == "/<%= model_controller_routing_path %>.json"
     end
     
     it "should route new_<%= model_controller_routing_name.singularize %>_path() to /<%= model_controller_routing_path %>/new" do
       new_<%= model_controller_routing_name.singularize %>_path().should == "/<%= model_controller_routing_path %>/new"
-      new_<%= model_controller_routing_name.singularize %>_path(:format => 'xml').should == "/<%= model_controller_routing_path %>/new.xml"
-      new_<%= model_controller_routing_name.singularize %>_path(:format => 'json').should == "/<%= model_controller_routing_path %>/new.json"
+      formatted_new_<%= model_controller_routing_name.singularize %>_path(:format => 'xml').should == "/<%= model_controller_routing_path %>/new.xml"
+      formatted_new_<%= model_controller_routing_name.singularize %>_path(:format => 'json').should == "/<%= model_controller_routing_path %>/new.json"
     end
     
     it "should route <%= model_controller_routing_name.singularize %>_(:id => '1') to /<%= model_controller_routing_path %>/1" do
       <%= model_controller_routing_name.singularize %>_path(:id => '1').should == "/<%= model_controller_routing_path %>/1"
-      <%= model_controller_routing_name.singularize %>_path(:id => '1', :format => 'xml').should == "/<%= model_controller_routing_path %>/1.xml"
-      <%= model_controller_routing_name.singularize %>_path(:id => '1', :format => 'json').should == "/<%= model_controller_routing_path %>/1.json"
+      formatted_<%= model_controller_routing_name.singularize %>_path(:id => '1', :format => 'xml').should == "/<%= model_controller_routing_path %>/1.xml"
+      formatted_<%= model_controller_routing_name.singularize %>_path(:id => '1', :format => 'json').should == "/<%= model_controller_routing_path %>/1.json"
     end
     
     it "should route edit_<%= model_controller_routing_name.singularize %>_path(:id => '1') to /<%= model_controller_routing_path %>/1/edit" do

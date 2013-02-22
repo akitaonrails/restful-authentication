@@ -1,6 +1,5 @@
 require File.expand_path(File.dirname(__FILE__) + "/lib/insert_routes.rb")
 require 'digest/sha1'
-
 class AuthenticatedGenerator < Rails::Generator::NamedBase
   default_options :skip_migration => false,
                   :skip_routes    => false,
@@ -68,7 +67,7 @@ class AuthenticatedGenerator < Rails::Generator::NamedBase
     @model_controller_routing_path    = @model_controller_file_path
     @model_controller_controller_name = @model_controller_plural_name
 
-    load_or_initialize_site_keys
+    load_or_initialize_site_keys()
 
     if options[:dump_generator_attribute_names]
       dump_generator_attribute_names
@@ -97,21 +96,20 @@ class AuthenticatedGenerator < Rails::Generator::NamedBase
       m.directory File.join('app/helpers', model_controller_class_path)
       m.directory File.join('app/views', model_controller_class_path, model_controller_file_name)
       m.directory File.join('config/initializers')
-      m.file 'tasks/auth.rake', 'lib/tasks/auth.rake'
 
       if @rspec
         m.directory File.join('spec/controllers', controller_class_path)
         m.directory File.join('spec/controllers', model_controller_class_path)
         m.directory File.join('spec/models', class_path)
         m.directory File.join('spec/helpers', model_controller_class_path)
-        m.directory File.join('spec/blueprints', class_path)
-        m.directory 'features'
-        m.directory File.join('features', 'step_definitions')
+        m.directory File.join('spec/fixtures', class_path)
+        m.directory File.join('stories', model_controller_file_path)
+        m.directory File.join('stories', 'steps')
       else
         m.directory File.join('test/functional', controller_class_path)
         m.directory File.join('test/functional', model_controller_class_path)
         m.directory File.join('test/unit', class_path)
-        m.directory File.join('test/blueprints', class_path)        
+        m.directory File.join('test/fixtures', class_path)
       end
 
       m.template 'model.rb',
@@ -143,7 +141,7 @@ class AuthenticatedGenerator < Rails::Generator::NamedBase
       m.template 'authenticated_test_helper.rb',
                   File.join('lib', 'authenticated_test_helper.rb')
 
-      m.template 'site_keys.rb', site_keys_file      
+      m.template 'site_keys.rb', site_keys_file
 
       if @rspec
         # RSpec Specs
@@ -171,22 +169,28 @@ class AuthenticatedGenerator < Rails::Generator::NamedBase
                     File.join('spec/models',
                               class_path,
                               "#{file_name}_spec.rb")
-        m.template 'spec/blueprints/user.rb',
-                    File.join('spec/blueprints',
+        m.template 'spec/fixtures/users.yml',
+                    File.join('spec/fixtures',
                                class_path,
-                              "#{file_name}.rb")
+                              "#{table_name}.yml")
 
-        # Cucumber features
-        m.template  'features/step_definitions/user_steps.rb',
-         File.join('features/step_definitions/', "#{file_name}_steps.rb")
-        m.template  'features/accounts.feature',
-         File.join('features', 'accounts.feature')
-        m.template  'features/sessions.feature',
-         File.join('features', 'sessions.feature')
-        m.template  'features/step_definitions/ra_env.rb',
-         File.join('features', 'step_definitions', 'ra_env.rb')
-        m.template 'machinist_spec.rb',
-         File.join("config", "initializers", "machinist.rb")
+        # RSpec Stories
+        m.template  'stories/steps/ra_navigation_steps.rb',
+         File.join('stories/steps/ra_navigation_steps.rb')
+        m.template  'stories/steps/ra_response_steps.rb',
+         File.join('stories/steps/ra_response_steps.rb')
+        m.template  'stories/steps/ra_resource_steps.rb',
+         File.join('stories/steps/ra_resource_steps.rb')
+        m.template  'stories/steps/user_steps.rb',
+         File.join('stories/steps/', "#{file_name}_steps.rb")
+        m.template  'stories/users/accounts.story',
+         File.join('stories', model_controller_file_path, 'accounts.story')
+        m.template  'stories/users/sessions.story',
+         File.join('stories', model_controller_file_path, 'sessions.story')
+        m.template  'stories/rest_auth_stories_helper.rb',
+         File.join('stories', 'rest_auth_stories_helper.rb')
+        m.template  'stories/rest_auth_stories.rb',
+         File.join('stories', 'rest_auth_stories.rb')
 
       else
         m.template 'test/functional_test.rb',
@@ -201,15 +205,13 @@ class AuthenticatedGenerator < Rails::Generator::NamedBase
                     File.join('test/unit',
                               class_path,
                               "#{file_name}_test.rb")
-        m.template 'spec/blueprints/user.rb',
-                   File.join('test/blueprints', 
-                             class_path, 
-                             "#{file_name}.rb")
-        m.template 'machinist_test.rb',
-                   File.join("config", "initializers", "machinist.rb")
         if options[:include_activation]
           m.template 'test/mailer_test.rb', File.join('test/unit', class_path, "#{file_name}_mailer_test.rb")
         end
+        m.template 'spec/fixtures/users.yml',
+                    File.join('test/fixtures',
+                              class_path,
+                              "#{table_name}.yml")
       end
 
       m.template 'helper.rb',
@@ -244,20 +246,11 @@ class AuthenticatedGenerator < Rails::Generator::NamedBase
       unless options[:skip_routes]
         # Note that this fails for nested classes -- you're on your own with setting up the routes.
         m.route_resource  controller_singular_name
-        if options[:stateful]
-          m.route_resources model_controller_plural_name, :member => { :suspend   => :put,
-                                                                       :unsuspend => :put,
-                                                                       :purge     => :delete }
-        else        
-          m.route_resources model_controller_plural_name
-        end
+        m.route_resources model_controller_plural_name
         m.route_name('signup',   '/signup',   {:controller => model_controller_plural_name, :action => 'new'})
         m.route_name('register', '/register', {:controller => model_controller_plural_name, :action => 'create'})
         m.route_name('login',    '/login',    {:controller => controller_controller_name, :action => 'new'})
         m.route_name('logout',   '/logout',   {:controller => controller_controller_name, :action => 'destroy'})
-        if options[:include_activation]
-          m.route_name('activate', '/activate/:activation_code', { :controller => model_controller_plural_name, :action => 'activate', :activation_code => nil })
-        end
       end
     end
 
@@ -283,13 +276,6 @@ class AuthenticatedGenerator < Rails::Generator::NamedBase
         puts "- Install the acts_as_state_machine plugin:"
         puts "    svn export http://elitists.textdriven.com/svn/plugins/acts_as_state_machine/trunk vendor/plugins/acts_as_state_machine"
       end
-      puts 
-      puts ("-" * 70)
-      puts 
-      puts "- Add the following to your config/environments/cucumber.rb: "
-      puts
-      puts %(    config.gem 'pickle')
-      puts
       puts "- Add routes to these resources. In config/routes.rb, insert routes like:"
       puts %(    map.signup '/signup', :controller => '#{model_controller_file_name}', :action => 'new')
       puts %(    map.login  '/login',  :controller => '#{controller_file_name}', :action => 'new')
@@ -385,7 +371,6 @@ class AuthenticatedGenerator < Rails::Generator::NamedBase
       $rest_auth_keys_are_new                    = true
     end
   end
-
   def site_keys_file
     File.join("config", "initializers", "site_keys.rb")
   end

@@ -6,14 +6,16 @@ include AuthenticatedTestHelper
 include AuthenticatedSystem
 def action_name() end
 
-describe <%= controller_class_name %>Controller do  
+describe <%= controller_class_name %>Controller do
+  fixtures :<%= table_name %>
+  
   before do
     # FIXME -- <%= controller_file_name %> controller not testing xml logins 
     stub!(:authenticate_with_http_basic).and_return nil
   end    
   describe "logout_killing_session!" do
     before do
-      log_in
+      login_as :quentin
       stub!(:reset_session)
     end
     it 'resets the session'         do should_receive(:reset_session);         logout_killing_session! end
@@ -25,21 +27,17 @@ describe <%= controller_class_name %>Controller do
       logout_killing_session!
     end
     it 'forgets me' do    
-      current_<%= file_name %>_id = current_<%= file_name %>.id
       current_<%= file_name %>.remember_me
-      current_<%= file_name %>.remember_token.should_not be_nil 
-      current_<%= file_name %>.remember_token_expires_at.should_not be_nil
-      <%= class_name %>.find(current_<%= file_name %>_id).remember_token.should_not be_nil 
-      <%= class_name %>.find(current_<%= file_name %>_id).remember_token_expires_at.should_not be_nil
+      current_<%= file_name %>.remember_token.should_not be_nil; current_<%= file_name %>.remember_token_expires_at.should_not be_nil
+      <%= class_name %>.find(1).remember_token.should_not be_nil; <%= class_name %>.find(1).remember_token_expires_at.should_not be_nil
       logout_killing_session!
-      <%= class_name %>.find(current_<%= file_name %>_id).remember_token.should     be_nil 
-      <%= class_name %>.find(current_<%= file_name %>_id).remember_token_expires_at.should     be_nil
+      <%= class_name %>.find(1).remember_token.should     be_nil; <%= class_name %>.find(1).remember_token_expires_at.should     be_nil
     end
   end
 
   describe "logout_keeping_session!" do
     before do
-      log_in
+      login_as :quentin
       stub!(:reset_session)
     end
     it 'does not reset the session' do should_not_receive(:reset_session);   logout_keeping_session! end
@@ -51,14 +49,11 @@ describe <%= controller_class_name %>Controller do
       logout_keeping_session!
     end
     it 'forgets me' do    
-      current_<%= file_name %>_id = current_<%= file_name %>.id
       current_<%= file_name %>.remember_me
-      current_<%= file_name  %>.remember_token.should_not be_nil; current_<%= file_name %>.remember_token_expires_at.should_not be_nil
-      <%= class_name %>.find(current_<%= file_name %>_id).remember_token.should_not            be_nil
-      <%= class_name %>.find(current_<%= file_name %>_id).remember_token_expires_at.should_not be_nil
+      current_<%= file_name %>.remember_token.should_not be_nil; current_<%= file_name %>.remember_token_expires_at.should_not be_nil
+      <%= class_name %>.find(1).remember_token.should_not be_nil; <%= class_name %>.find(1).remember_token_expires_at.should_not be_nil
       logout_keeping_session!
-      <%= class_name %>.find(current_<%= file_name %>_id).remember_token.should                be_nil
-      <%= class_name %>.find(current_<%= file_name %>_id).remember_token_expires_at.should     be_nil
+      <%= class_name %>.find(1).remember_token.should     be_nil; <%= class_name %>.find(1).remember_token_expires_at.should     be_nil
     end
   end
   
@@ -73,12 +68,12 @@ describe <%= controller_class_name %>Controller do
   #
   describe "Logging in by cookie" do
     def set_remember_token token, time
-      @<%= file_name %>[:remember_token]            = token
+      @<%= file_name %>[:remember_token]            = token; 
       @<%= file_name %>[:remember_token_expires_at] = time
       @<%= file_name %>.save!
     end    
     before do 
-      @<%= file_name %> = <%= class_name %>.make
+      @<%= file_name %> = <%= class_name %>.find(:first); 
       set_remember_token 'hello!', 5.minutes.from_now
     end    
     it 'logs in with cookie' do

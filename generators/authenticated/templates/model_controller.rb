@@ -7,7 +7,7 @@ class <%= model_controller_class_name %>Controller < ApplicationController
   before_filter :find_<%= file_name %>, :only => [:suspend, :unsuspend, :destroy, :purge]
   <% end %>
 
-  # render new.html.erb
+  # render new.rhtml
   def new
     @<%= file_name %> = <%= class_name %>.new
   end
@@ -22,29 +22,20 @@ class <%= model_controller_class_name %>Controller < ApplicationController
     success = @<%= file_name %> && @<%= file_name %>.save
 <% end -%>
     if success && @<%= file_name %>.errors.empty?
-<% if !options[:include_activation] -%>
+      <% if !options[:include_activation] -%>
       # Protects against session fixation attacks, causes request forgery
       # protection if visitor resubmits an earlier form using back
       # button. Uncomment if you understand the tradeoffs.
       # reset session
       self.current_<%= file_name %> = @<%= file_name %> # !! now logged in
       <% end -%>redirect_back_or_default('/')
-<% if options[:include_activation] -%>
       flash[:notice] = "Thanks for signing up!  We're sending you an email with your activation code."
-<% else -%>
-      flash[:notice] = "Thanks for signing up!"
-<% end -%>
     else
-<% if options[:include_activation] -%>
-      flash[:error] = "We couldn't set up that account, sorry.  Please try again, or contact an admin (link is above)."
-<% else -%>
-      flash[:error] = "We couldn't create your account, sorry."
-<% end -%>
+      flash[:error]  = "We couldn't set up that account, sorry.  Please try again, or contact an admin (link is above)."
       render :action => 'new'
     end
   end
-  
-<% if options[:include_activation] -%>
+<% if options[:include_activation] %>
   def activate
     logout_keeping_session!
     <%= file_name %> = <%= class_name %>.find_by_activation_code(params[:activation_code]) unless params[:activation_code].blank?
@@ -61,9 +52,7 @@ class <%= model_controller_class_name %>Controller < ApplicationController
       redirect_back_or_default('/')
     end
   end
-<% end -%>
-
-<% if options[:stateful] -%>
+<% end %><% if options[:stateful] %>
   def suspend
     @<%= file_name %>.suspend! 
     redirect_to <%= model_controller_routing_name %>_path

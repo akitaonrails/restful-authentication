@@ -5,7 +5,7 @@ include AuthenticatedTestHelper
 
 describe <%= model_controller_class_name %>Helper do
   before do
-    @<%= file_name %> = <%= class_name %>.make
+    @<%= file_name %> = mock_<%= file_name %>
   end
   
   describe "if_authorized" do 
@@ -31,16 +31,16 @@ describe <%= model_controller_class_name %>Helper do
       link_to_<%= file_name %>(@<%= file_name %>, :content_text => 'Hello there!').should have_tag("a", 'Hello there!')
     end
     it "should use the login as link text with no :content_method specified" do
-      link_to_<%= file_name %>(@<%= file_name %>).should have_tag("a", @<%= file_name %>.login)
+      link_to_<%= file_name %>(@<%= file_name %>).should have_tag("a", 'user_name')
     end
     it "should use the name as link text with :content_method => :name" do
-      link_to_<%= file_name %>(@<%= file_name %>, :content_method => :name).should have_tag("a", @<%= file_name %>.name)
+      link_to_<%= file_name %>(@<%= file_name %>, :content_method => :name).should have_tag("a", 'U. Surname')
     end
     it "should use the login as title with no :title_method specified" do
-      link_to_<%= file_name %>(@<%= file_name %>).should have_tag("a[title='#{@<%= file_name %>.login}']")
+      link_to_<%= file_name %>(@<%= file_name %>).should have_tag("a[title='user_name']")
     end
     it "should use the name as link title with :content_method => :name" do
-      link_to_<%= file_name %>(@<%= file_name %>, :title_method => :name).should have_tag("a[title='#{@<%= file_name %>.name}']")
+      link_to_<%= file_name %>(@<%= file_name %>, :title_method => :name).should have_tag("a[title='U. Surname']")
     end
     it "should have nickname as a class by default" do
       link_to_<%= file_name %>(@<%= file_name %>).should have_tag("a.nickname")
@@ -91,16 +91,16 @@ describe <%= model_controller_class_name %>Helper do
       link_to_current_<%= file_name %>(:content_text => 'Hello there!').should have_tag("a", 'Hello there!')
     end
     it "should use the login as link text with no :content_method specified" do
-      link_to_current_<%= file_name %>().should have_tag("a", @<%= file_name %>.login)
+      link_to_current_<%= file_name %>().should have_tag("a", 'user_name')
     end
     it "should use the name as link text with :content_method => :name" do
-      link_to_current_<%= file_name %>(:content_method => :name).should have_tag("a", @<%= file_name %>.name)
+      link_to_current_<%= file_name %>(:content_method => :name).should have_tag("a", 'U. Surname')
     end
     it "should use the login as title with no :title_method specified" do
-      link_to_current_<%= file_name %>().should have_tag("a[title='#{@<%= file_name %>.login}']")
+      link_to_current_<%= file_name %>().should have_tag("a[title='user_name']")
     end
     it "should use the name as link title with :content_method => :name" do
-      link_to_current_<%= file_name %>(:title_method => :name).should have_tag("a[title='#{@<%= file_name %>.name}']")
+      link_to_current_<%= file_name %>(:title_method => :name).should have_tag("a[title='U. Surname']")
     end
     it "should have nickname as a class" do
       link_to_current_<%= file_name %>().should have_tag("a.nickname")
